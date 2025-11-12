@@ -151,5 +151,13 @@ namespace Platformer2DSystem.Example
         {
             jumper.CancelJump();
         }
+
+        private void OnTriggerEnter2D(Collider2D collision)
+        {
+            if (collision.transform.tag == "Enemy")
+            {
+                Destroy(collision.transform.parent.gameObject);
+            }
+        }
     }
 }
