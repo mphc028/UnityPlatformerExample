@@ -1,7 +1,9 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace Platformer2DSystem.Example
 {
@@ -22,7 +24,11 @@ namespace Platformer2DSystem.Example
         [SerializeField] private int enemyCooldown = 100;
         private int enemyCooldownCount;
         private bool isHit = false;
+        [SerializeField] private Slider slider;
 
+        [Header("Coins Settings")]
+        private int coins = 0;
+        [SerializeField] private TextMeshProUGUI coinsText;
 
         private Actor actor;
         private Runner runner;
@@ -177,26 +183,45 @@ namespace Platformer2DSystem.Example
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            if (collision.transform.tag == "Enemy" && actor.velocity.y < 0)
+            if (collision.transform.tag == "Portal")
             {
-                actor.velocity.y = 50f;
-                Destroy(collision.transform.parent.gameObject);
-            } else
-            {
-                if (!isHit)
-                {
-                    lives--;
-                    actor.velocity.x =
-                        transform.position.x > collision.transform.position.x ?
-                        50f : -50f;
+                collision.gameObject.GetComponent<Portal>().GoToScene();
+            }
 
+            if (collision.transform.tag == "Coin")
+            {
+                Destroy(collision.gameObject);
+
+                coins++;
+                coinsText.text = coins.ToString();
+            }
+
+            if (collision.transform.tag == "Enemy")
+            {
+                if (actor.velocity.y < 0)
+                {
+                    actor.velocity.y = 50f;
+                    Destroy(collision.transform.parent.gameObject);
                     isHit = true;
                 }
-
-
-                if (lives < 0)
+                else
                 {
-                    SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+                    if (!isHit)
+                    {
+                        lives--;
+                        slider.value = (float)lives / (float)maxLives;
+                        actor.velocity.x =
+                            transform.position.x > collision.transform.position.x ?
+                            50f : -50f;
+
+                        isHit = true;
+                    }
+
+
+                    if (lives < 0)
+                    {
+                        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+                    }
                 }
             }
         }
