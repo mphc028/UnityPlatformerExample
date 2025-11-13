@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace Platformer2DSystem.Example
 {
@@ -14,6 +15,13 @@ namespace Platformer2DSystem.Example
         [SerializeField] private int jumpBufferFrames = 5;
         [SerializeField] private float jumpMovementMultiplier = 0.8f;
         [SerializeField] private float doubleJumpMultiplier = 0.9f;
+
+        [Header("Lives Settings")]
+        private int lives = 3;
+        [SerializeField] private int maxLives = 3;
+        [SerializeField] private int enemyCooldown = 100;
+        private int enemyCooldownCount;
+        private bool isHit = false;
 
 
         private Actor actor;
@@ -37,6 +45,8 @@ namespace Platformer2DSystem.Example
             actor = GetComponent<Actor>();
             runner = GetComponent<Runner>();
             jumper = GetComponent<Jumper>();
+
+            lives = maxLives;
 
             jumpBufferTimer = Timer.Frames(jumpBufferFrames);
             remainingJumps = maxJumps;
@@ -87,6 +97,19 @@ namespace Platformer2DSystem.Example
 
         private void Update()
         {
+            //Debug.Log(actor.velocity.y);
+
+            if (isHit)
+            {
+                enemyCooldownCount++;
+
+                if (enemyCooldownCount >= enemyCooldown)
+                {
+                    enemyCooldownCount = 0;
+                    isHit = false;
+                }
+            }
+
             UpdateMovement();
             UpdateJumping();
         }
@@ -154,9 +177,27 @@ namespace Platformer2DSystem.Example
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            if (collision.transform.tag == "Enemy")
+            if (collision.transform.tag == "Enemy" && actor.velocity.y < 0)
             {
+                actor.velocity.y = 50f;
                 Destroy(collision.transform.parent.gameObject);
+            } else
+            {
+                if (!isHit)
+                {
+                    lives--;
+                    actor.velocity.x =
+                        transform.position.x > collision.transform.position.x ?
+                        50f : -50f;
+
+                    isHit = true;
+                }
+
+
+                if (lives < 0)
+                {
+                    SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+                }
             }
         }
     }
